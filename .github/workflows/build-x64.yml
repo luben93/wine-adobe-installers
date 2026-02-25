@@ -1,0 +1,121 @@
+# GitHub Actions workflow: build and publish Wine x64 binaries
+
+name: Build and Publish Wine x64
+
+on:
+  push:
+    branches:
+      - 'proton_*'
+      - 'experimental_*'
+    tags:
+      - 'wine-*'
+  pull_request:
+
+jobs:
+  build-x64:
+    name: Build Wine x64
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            gcc-mingw-w64-x86-64 \
+            llvm \
+            clang \
+            lld \
+            autoconf \
+            flex \
+            bison \
+            perl \
+            gettext \
+            libasound2-dev \
+            libavutil-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            libcups2-dev \
+            libdbus-1-dev \
+            libfontconfig-dev \
+            libfreetype-dev \
+            libgl-dev \
+            libgnutls28-dev \
+            libgphoto2-dev \
+            libice-dev \
+            libkrb5-dev \
+            libosmesa6-dev \
+            libpcap-dev \
+            libpcsclite-dev \
+            libpulse-dev \
+            libsane-dev \
+            libsdl2-dev \
+            libudev-dev \
+            libusb-1.0-0-dev \
+            libv4l-dev \
+            libvulkan-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxkbcommon-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libxxf86vm-dev \
+            ocl-icd-opencl-dev \
+            unixodbc-dev \
+            x11proto-dev
+
+      - name: Generate build files
+        run: |
+          python3 ./dlls/winevulkan/make_vulkan -x vk.xml -X video.xml
+          ./tools/make_requests
+          ./tools/make_specfiles
+          ./tools/make_makefiles
+          autoreconf -f
+
+      - name: Configure Wine x64
+        run: |
+          mkdir -p build64
+          cd build64
+          ../configure --enable-win64 --with-mingw
+
+      - name: Build Wine x64
+        run: |
+          make -C build64 -j$(nproc)
+
+      - name: Install Wine x64
+        run: |
+          make -C build64 install-lib DESTDIR=$PWD/dist
+
+      - name: Package Wine x64 binaries
+        run: |
+          VERSION=$(grep -oP '[\d.]+' VERSION)
+          TARBALL="wine-${VERSION}-x86_64.tar.xz"
+          tar -cJf "$TARBALL" -C dist .
+          echo "TARBALL=$TARBALL" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wine-x64-binaries
+          path: ${{ env.TARBALL }}
+          retention-days: 7
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/wine-')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Wine ${{ env.VERSION }}
+          files: ${{ env.TARBALL }}

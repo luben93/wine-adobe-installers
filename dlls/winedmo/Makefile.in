@@ -8,11 +8,11 @@ PARENTSRC = ../winegstreamer
 EXTRADEFS = -D_WINEDMO
 
 SOURCES = \
+	libavcodec/pcm_byte_order_reverse_bsf.c \
 	main.c \
 	media-converter/fossilize.c \
-	media-converter/murmur3.c \
 	media-converter/lib.c \
-	libavcodec/pcm_byte_order_reverse_bsf.c \
+	media-converter/murmur3.c \
 	unix_demuxer.c \
 	unix_demuxer_mediaconv.c \
 	unix_media_type.c \
