@@ -78,6 +78,7 @@ jobs:
 
       - name: Generate build files
         run: |
+          python3 ./dlls/winevulkan/make_vulkan -x vk.xml -X video.xml
           ./tools/make_requests
           ./tools/make_specfiles
           ./tools/make_makefiles
