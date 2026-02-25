@@ -3,4 +3,5 @@ IMPORTS   = ntoskrnl
 EXTRADLLFLAGS = -Wl,--subsystem,native
 
 SOURCES = \
-	shared_resource.c
+	shared_resource.c \
+	sharedgpures.sys.spec

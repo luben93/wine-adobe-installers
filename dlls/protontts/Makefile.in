@@ -6,6 +6,6 @@ UNIX_LIBS   = $(PIPER_LIBS) $(PTHREAD_LIBS)
 
 SOURCES = \
 	main.c \
-	tts.c \
 	protontts_classes.idl \
+	tts.c \
 	unixlib.c

@@ -5,5 +5,5 @@ IMPORTLIB = amdxc64
 EXTRADLLFLAGS = -mno-cygwin
 
 SOURCES = \
-	main.c \
 	amdxc_interfaces.idl \
+	main.c
